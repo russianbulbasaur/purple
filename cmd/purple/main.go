@@ -1,11 +1,8 @@
 package main
 
-import (
-	"fmt"
-	myResp "github.com/russianbulbasaur/my-resp"
-)
+import "purple/internals/server"
 
 func main() {
-	resp := myResp.Init()
-	fmt.Println("%#v", resp)
+	purpleServer := server.NewServer(8000, "localhost")
+	purpleServer.Listen()
 }
