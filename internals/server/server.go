@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"purple/internals/client"
 	"strconv"
 )
 
@@ -34,6 +35,7 @@ func (server *Server) Listen() {
 			log.Println("Error accept client", err)
 			continue
 		}
-		println(connection)
+		newClient := client.NewClient(connection)
+		go newClient.Handle()
 	}
 }
