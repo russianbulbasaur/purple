@@ -1,20 +1,20 @@
 package client
 
 import (
-	//resp "github.com/russianbulbasaur/my-resp"
 	"log"
 	"net"
+	resp "purple/internals/my_resp"
 )
 
 type Client struct {
 	conn net.Conn
-	//resp *resp.MyRespObject
+	resp *resp.MyRespObject
 }
 
 func NewClient(connection net.Conn) *Client {
 	return &Client{
 		connection,
-		//resp.Init(),
+		resp.Init(),
 	}
 }
 
@@ -27,8 +27,7 @@ func (client *Client) Handle() {
 			break
 		}
 		message := buffer[0 : count-1]
-		println(message)
-		//idk, purpleType := client.resp.D.Decode(message)
-		//log.Printf("%#v %#v", idk, purpleType)
+		idk, purpleType := client.resp.D.Decode(message)
+		log.Printf("%#v %#v", idk, purpleType)
 	}
 }
