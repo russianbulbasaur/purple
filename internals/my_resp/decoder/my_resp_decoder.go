@@ -7,18 +7,18 @@ import (
 type MyRespDecoder struct {
 }
 
-func (decoder *MyRespDecoder) Decode(input []byte) (interface{}, error) {
+func (decoder *MyRespDecoder) Decode(input []byte) (interface{}, error, uint64) {
 	switch input[0] {
 	case constants.SimpleStringPrefix:
 		return decodeSimpleString(input)
-	//case constants.BulkStringPrefix:
-	//	return decodeBulkString(input)
-	//case constants.IntegerPrefix:
-	//	return decodeInteger(input)
+	case constants.BulkStringPrefix:
+		return decodeBulkString(input)
+	case constants.IntegerPrefix:
+		return decodeInteger(input)
 	//case constants.ErrorPrefix:
 	//	return decodeError(input)
-	//case constants.BooleanPrefix:
-	//	return decodeBoolean(input)
+	case constants.BooleanPrefix:
+		return decodeBoolean(input)
 	case constants.ArrayPrefix:
 		return decodeArray(input)
 	default:

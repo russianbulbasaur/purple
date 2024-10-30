@@ -1,4 +1,6 @@
 package array
 
-type PurpleArray struct {
+type PurpleArray interface {
+	AddElement(interface{})
+	GetLen() int
 }

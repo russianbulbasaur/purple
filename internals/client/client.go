@@ -27,7 +27,7 @@ func (client *Client) Handle() {
 			break
 		}
 		message := buffer[0 : count-1]
-		idk, purpleType := client.resp.D.Decode(message)
-		log.Printf("%#v %#v", idk, purpleType)
+		idk, purpleType, decodeCount := client.resp.D.Decode(message)
+		log.Printf("%#v %#v %d", idk, purpleType, decodeCount)
 	}
 }

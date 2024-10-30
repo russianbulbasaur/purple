@@ -2,26 +2,30 @@ package decoder
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"purple/internals/my_resp/constants"
+	types "purple/internals/my_resp/purple_data_types"
+	arrayTypes "purple/internals/my_resp/purple_data_types/array"
 	"strconv"
 )
 
-func decodeArray(input []byte) (interface{}, string) {
+func decodeArray(input []byte) (arrayTypes.PurpleArray, error, uint64) {
+	var counter uint64 = 1 //pehla byte
 	if !isValid(input) {
 		log.Println("CR and LF bytes not in place")
-		return nil, ""
+		return nil, errors.New("CR and LF bytes not in place"), counter
 	}
 	if input[0] != constants.ArrayPrefix {
 		log.Println("Invalid array prefix")
-		return nil, ""
+		return nil, errors.New("invalid array prefix"), counter
 	}
 	numberOfElementsBuffer := bytes.NewBuffer(make([]byte, 0))
-	counter := 1
-	for _, b := range input[counter:] {
-		counter++
+	var pointer uint64 = 1
+	for _, b := range input[pointer:] {
+		pointer++
 		if b == constants.CR {
-			counter++ // lf flag accounting
+			pointer++ // lf flag accounting
 			break
 		}
 		numberOfElementsBuffer.WriteByte(b)
@@ -29,11 +33,31 @@ func decodeArray(input []byte) (interface{}, string) {
 	numberOfElements, err := strconv.Atoi(string(numberOfElementsBuffer.Bytes()))
 	if err != nil {
 		log.Println("Invalid number of elements")
-		return nil, ""
+		return nil, errors.New("invalid number of elements"), counter
 	}
 	log.Printf("Number of elements %d", numberOfElements)
 	decoder := MyRespDecoder{}
-	log.Println(string(input[counter:]))
-	decoder.Decode(input[counter:])
-	return nil, ""
+	var result arrayTypes.PurpleArray = nil
+	for pointer < uint64(len(input)) {
+		purpleDataType, err, decodeCount := decoder.Decode(input[pointer:])
+		if err != nil {
+			log.Println(err)
+			break
+		}
+		pointer += decodeCount
+		switch purpleDataType.(type) {
+		case types.PurpleString:
+			if result == nil {
+				result = &arrayTypes.PurpleStringArray{}
+			}
+			result.AddElement(purpleDataType)
+		case types.PurpleBoolean:
+			if result == nil {
+				result = &arrayTypes.PurpleBooleanArray{}
+			}
+			result.AddElement(purpleDataType)
+		}
+	}
+	log.Printf("%d", result.GetLen())
+	return result, nil, counter
 }
