@@ -58,6 +58,7 @@ func decodeArray(input []byte) (arrayTypes.PurpleArray, error, uint64) {
 			result.AddElement(purpleDataType)
 		}
 	}
+	//need to push commit
 	log.Printf("%d", result.GetLen())
 	return result, nil, counter
 }

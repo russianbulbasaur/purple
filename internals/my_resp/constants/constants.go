@@ -15,3 +15,7 @@ const True byte = 't'
 const False byte = 'f'
 const PositiveSign byte = '+'
 const NegativeSign byte = '-'
+
+const PurpleBooleanArrayType = 0
+
+const PurpleStringArrayType = 1

@@ -1,6 +1,7 @@
 package array
 
 import (
+	"purple/internals/my_resp/constants"
 	types "purple/internals/my_resp/purple_data_types"
 )
 
@@ -15,4 +16,12 @@ func (p *PurpleBooleanArray) AddElement(i interface{}) {
 
 func (p *PurpleBooleanArray) GetLen() int {
 	return len(p.elements)
+}
+
+func (p *PurpleBooleanArray) GetType() int {
+	return constants.PurpleBooleanArrayType
+}
+
+func (p *PurpleBooleanArray) GetStruct() interface{} {
+	return p
 }
