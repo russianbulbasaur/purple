@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"log"
+	"math"
 	"purple/internals/my_resp/constants"
 	types "purple/internals/my_resp/purple_data_types"
 	arrayTypes "purple/internals/my_resp/purple_data_types/array"
@@ -39,9 +40,28 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 			response.Write(client.resp.E.EncodeSimpleString(parameter.Value))
 			i++
 		} else if element.Value == "GET" {
-
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			value := client.get(key.Value)
+			if value == nil {
+				response.WriteString("null")
+			} else {
+				response.Write(client.resp.E.EncodeSimpleString(value.(string)))
+			}
+			i++
 		} else if element.Value == "SET" {
-
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			value, err := purpleStringArray.GetElementAt(i + 2)
+			if err != nil {
+				return
+			}
+			client.set(key.Value, value.Value, math.MaxInt64)
+			i += 2
 		}
 	}
 	client.writeChannel <- response.Bytes()

@@ -16,9 +16,11 @@ type Client struct {
 	writeChannel  chan []byte
 	clientContext context.Context
 	cancel        context.CancelFunc
+	set           func(string, interface{}, int64)
+	get           func(string) interface{}
 }
 
-func NewClient(connection net.Conn) *Client {
+func NewClient(connection net.Conn, set func(string, interface{}, int64), get func(string) interface{}) *Client {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Client{
 		connection,
@@ -26,6 +28,8 @@ func NewClient(connection net.Conn) *Client {
 		make(chan []byte),
 		ctx,
 		cancel,
+		set,
+		get,
 	}
 }
 
