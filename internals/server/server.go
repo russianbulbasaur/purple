@@ -62,5 +62,8 @@ func (server *Server) get(key string) interface{} {
 	if data.expiry == math.MaxInt64 {
 		return data.value
 	}
+	if data.expiry >= time.Now().Unix() {
+		return data.value
+	}
 	return nil
 }

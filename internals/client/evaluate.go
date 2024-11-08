@@ -7,6 +7,7 @@ import (
 	"purple/internals/my_resp/constants"
 	types "purple/internals/my_resp/purple_data_types"
 	arrayTypes "purple/internals/my_resp/purple_data_types/array"
+	"strconv"
 )
 
 func (client *Client) evaluateArray(purpleArray arrayTypes.PurpleArray) {
@@ -60,7 +61,26 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 			if err != nil {
 				return
 			}
-			client.set(key.Value, value.Value, math.MaxInt64)
+			if purpleStringArray.GetLen() > i+3 {
+				next, err := purpleStringArray.GetElementAt(i + 3)
+				if err != nil {
+					return
+				}
+				if next.Value == "px" {
+					m, err := purpleStringArray.GetElementAt(i + 4)
+					if err != nil {
+						return
+					}
+					milliseconds, err := strconv.ParseInt(m.Value, 10, 64)
+					if err != nil {
+						log.Println("invalid milliseconds")
+						return
+					}
+					client.set(key.Value, value.Value, milliseconds/1000)
+				}
+			} else {
+				client.set(key.Value, value.Value, math.MaxInt64)
+			}
 			i += 2
 		}
 	}
