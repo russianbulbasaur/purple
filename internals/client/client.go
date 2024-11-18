@@ -7,6 +7,7 @@ import (
 	resp "purple/internals/my_resp"
 	types "purple/internals/my_resp/purple_data_types"
 	arrayTypes "purple/internals/my_resp/purple_data_types/array"
+	"purple/internals/rdb"
 	"runtime"
 )
 
@@ -18,9 +19,12 @@ type Client struct {
 	cancel        context.CancelFunc
 	set           func(string, interface{}, int64)
 	get           func(string) interface{}
+	serverConfig  map[string]string
+	rdbReader     *rdb.RDBReader
 }
 
-func NewClient(connection net.Conn, set func(string, interface{}, int64), get func(string) interface{}) *Client {
+func NewClient(connection net.Conn, set func(string, interface{}, int64), get func(string) interface{},
+	serverConfig map[string]string) *Client {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Client{
 		connection,
@@ -30,6 +34,8 @@ func NewClient(connection net.Conn, set func(string, interface{}, int64), get fu
 		cancel,
 		set,
 		get,
+		serverConfig,
+		rdb.NewRDBReader(serverConfig["dir"], serverConfig["dbfilename"]),
 	}
 }
 

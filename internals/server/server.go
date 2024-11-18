@@ -16,14 +16,16 @@ type Server struct {
 	address       string
 	serverContext context.Context
 	void          map[string]dataNode
+	config        map[string]string
 }
 
-func NewServer(port int, address string) Server {
+func NewServer(port int, address string, config map[string]string) Server {
 	return Server{
 		port,
 		address,
 		context.Background(),
 		make(map[string]dataNode),
+		config,
 	}
 }
 
@@ -39,7 +41,7 @@ func (server *Server) Listen() {
 			log.Println("Error accept client", err)
 			continue
 		}
-		newClient := client.NewClient(connection, server.set, server.get)
+		newClient := client.NewClient(connection, server.set, server.get, server.config)
 		go newClient.Handle()
 	}
 }

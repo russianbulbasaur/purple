@@ -1,6 +1,7 @@
 package decoder
 
 import (
+	"log"
 	"purple/internals/my_resp/constants"
 )
 
@@ -8,6 +9,7 @@ type MyRespDecoder struct {
 }
 
 func (decoder *MyRespDecoder) Decode(input []byte) (interface{}, error, uint64) {
+	log.Println(input)
 	switch input[0] {
 	case constants.SimpleStringPrefix:
 		return decodeSimpleString(input)

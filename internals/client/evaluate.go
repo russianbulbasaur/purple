@@ -82,6 +82,32 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 				client.set(key.Value, value.Value, math.MaxInt64)
 			}
 			i += 2
+		} else if element.Value == "CONFIG" {
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			if key.Value == "GET" {
+				key, err := purpleStringArray.GetElementAt(i + 2)
+				if err != nil {
+					return
+				}
+				switch key.Value {
+				case "dir":
+					encoded := client.resp.E.EncodeStringArray(
+						[]string{"dir", client.serverConfig["dir"]})
+					log.Println(encoded)
+					response.Write(encoded)
+				case "dbfilename":
+					response.Write(client.resp.E.EncodeStringArray(
+						[]string{"dir", client.serverConfig["dir"]}))
+				default:
+					log.Printf("%s not found", key.Value)
+				}
+			} else {
+				log.Println("Not implemented yet")
+				return
+			}
 		}
 	}
 	client.writeChannel <- response.Bytes()
