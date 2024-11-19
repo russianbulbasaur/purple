@@ -13,7 +13,7 @@ func main() {
 	if len(args) > 1 {
 		argsMap = parseArguments(args)
 	}
-	purpleServer := server.NewServer(6379, "localhost", argsMap)
+	purpleServer := server.NewServer(8000, "localhost", argsMap)
 	purpleServer.Listen()
 }
 

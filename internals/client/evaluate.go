@@ -95,12 +95,12 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 				switch key.Value {
 				case "dir":
 					encoded := client.resp.E.EncodeStringArray(
-						[]string{"dir", client.serverConfig["dir"]})
+						[]string{"dir", client.rdbFile.GetDir()})
 					log.Println(encoded)
 					response.Write(encoded)
 				case "dbfilename":
 					response.Write(client.resp.E.EncodeStringArray(
-						[]string{"dir", client.serverConfig["dir"]}))
+						[]string{"dbfilename", client.rdbFile.GetDBFileName()}))
 				default:
 					log.Printf("%s not found", key.Value)
 				}

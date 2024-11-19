@@ -7,6 +7,7 @@ import (
 	"math"
 	"net"
 	"purple/internals/client"
+	"purple/internals/rdb"
 	"strconv"
 	"time"
 )
@@ -16,16 +17,17 @@ type Server struct {
 	address       string
 	serverContext context.Context
 	void          map[string]dataNode
-	config        map[string]string
+	rdbFile       *rdb.RDBFile
 }
 
 func NewServer(port int, address string, config map[string]string) Server {
+	rdbFile := rdb.NewRDBFile(config["dbfilename"], config["dir"])
 	return Server{
 		port,
 		address,
 		context.Background(),
 		make(map[string]dataNode),
-		config,
+		rdbFile,
 	}
 }
 
@@ -41,7 +43,7 @@ func (server *Server) Listen() {
 			log.Println("Error accept client", err)
 			continue
 		}
-		newClient := client.NewClient(connection, server.set, server.get, server.config)
+		newClient := client.NewClient(connection, server.set, server.get, server.rdbFile)
 		go newClient.Handle()
 	}
 }

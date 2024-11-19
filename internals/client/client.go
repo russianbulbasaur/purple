@@ -19,13 +19,15 @@ type Client struct {
 	cancel        context.CancelFunc
 	set           func(string, interface{}, int64)
 	get           func(string) interface{}
-	serverConfig  map[string]string
 	rdbReader     *rdb.RDBReader
+	rdbFile       *rdb.RDBFile
 }
 
 func NewClient(connection net.Conn, set func(string, interface{}, int64), get func(string) interface{},
-	serverConfig map[string]string) *Client {
+	rdbFile *rdb.RDBFile) *Client {
 	ctx, cancel := context.WithCancel(context.Background())
+	rdbReader := rdb.NewRDBReader(rdbFile)
+	rdbReader.ReadHeader()
 	return &Client{
 		connection,
 		resp.Init(),
@@ -34,8 +36,8 @@ func NewClient(connection net.Conn, set func(string, interface{}, int64), get fu
 		cancel,
 		set,
 		get,
-		serverConfig,
-		rdb.NewRDBReader(serverConfig["dir"], serverConfig["dbfilename"]),
+		rdbReader,
+		rdbFile,
 	}
 }
 

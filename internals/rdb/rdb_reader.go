@@ -3,29 +3,25 @@ package rdb
 import (
 	"bufio"
 	"log"
-	"os"
-	"path"
 )
 
 type RDBReader struct {
-	rdbFile    *os.File
-	readBuffer *bufio.Reader
+	bufReader *bufio.Reader
 }
 
-func NewRDBReader(filepath string, filename string) *RDBReader {
-	fullPath := path.Join(filepath, filename)
-	file, err := os.OpenFile(fullPath, os.O_CREATE|os.O_RDONLY, 0666)
-	if err != nil {
-		log.Fatalf("Cannot open file %s", fullPath)
-		return nil
-	}
-	bufferedReader := bufio.NewReader(file)
+func NewRDBReader(file *RDBFile) *RDBReader {
+	bufferedReader := bufio.NewReader(file.file)
 	return &RDBReader{
-		file,
 		bufferedReader,
 	}
 }
 
 func (reader *RDBReader) ReadHeader() {
-
+	buffer := make([]byte, 9)
+	_, err := reader.bufReader.Read(buffer)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Printf("Read : %s", string(buffer))
 }
