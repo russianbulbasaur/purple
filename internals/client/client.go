@@ -27,7 +27,7 @@ func NewClient(connection net.Conn, set func(string, interface{}, int64), get fu
 	rdbFile *rdb.RDBFile) *Client {
 	ctx, cancel := context.WithCancel(context.Background())
 	rdbReader := rdb.NewRDBReader(rdbFile)
-	rdbReader.ReadHeader()
+	rdbReader.ReadEOFSection()
 	return &Client{
 		connection,
 		resp.Init(),
