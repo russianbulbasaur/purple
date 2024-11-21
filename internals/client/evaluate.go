@@ -76,11 +76,12 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 						log.Println("invalid milliseconds")
 						return
 					}
-					client.set(key.Value, value.Value, milliseconds/1000)
+					client.set(key.Value, value.Value, milliseconds)
 				}
 			} else {
 				client.set(key.Value, value.Value, math.MaxInt64)
 			}
+			response.Write(client.resp.E.EncodeSimpleString("OK"))
 			i += 2
 		} else if element.Value == "CONFIG" {
 			key, err := purpleStringArray.GetElementAt(i + 1)

@@ -50,7 +50,7 @@ func (server *Server) Listen() {
 
 func (server *Server) set(key string, value interface{}, expiry int64) {
 	if expiry != math.MaxInt64 {
-		expiry = time.Now().Unix() + expiry
+		expiry = time.Now().Unix()*1000 + expiry
 	}
 	data := dataNode{
 		value, expiry,
@@ -66,7 +66,7 @@ func (server *Server) get(key string) interface{} {
 	if data.expiry == math.MaxInt64 {
 		return data.value
 	}
-	if data.expiry >= time.Now().Unix() {
+	if data.expiry > time.Now().Unix()*1000 {
 		return data.value
 	}
 	return nil
