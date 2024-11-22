@@ -30,14 +30,14 @@ func (encoder *MyRespEncoder) EncodeIntegerArray(array []int) []byte {
 	return response.Bytes()
 }
 
-func (encoder *MyRespEncoder) EncodeStringArray(array []string) []byte {
+func (encoder *MyRespEncoder) EncodeBulkStringArray(array []string) []byte {
 	if len(array) == 0 {
 		return emptyArray()
 	}
 	response := bytes.NewBuffer(make([]byte, 0))
-	response.WriteString(fmt.Sprintf("%s%d\r\n", constants.ArrayPrefix, len(array)))
+	response.WriteString(fmt.Sprintf("%c%d\r\n", constants.ArrayPrefix, len(array)))
 	for _, element := range array {
-		response.Write(encoder.EncodeSimpleString(element))
+		response.Write(encoder.EncodeBulkString(element))
 	}
 	return response.Bytes()
 }

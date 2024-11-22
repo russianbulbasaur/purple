@@ -16,6 +16,7 @@ func decodeArray(input []byte) (arrayTypes.PurpleArray, error, uint64) {
 		log.Println("CR and LF bytes not in place")
 		return nil, errors.New("CR and LF bytes not in place"), counter
 	}
+	log.Println(input)
 	if input[0] != constants.ArrayPrefix {
 		log.Println("Invalid array prefix")
 		return nil, errors.New("invalid array prefix"), counter

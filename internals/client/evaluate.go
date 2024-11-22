@@ -47,7 +47,8 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 			}
 			value := client.get(key.Value)
 			if value == nil {
-				response.WriteString("null")
+				log.Println("expired")
+				response.Write(client.resp.E.EncodeBulkString(""))
 			} else {
 				response.Write(client.resp.E.EncodeSimpleString(value.(string)))
 			}
@@ -83,6 +84,7 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 			}
 			response.Write(client.resp.E.EncodeSimpleString("OK"))
 			i += 2
+			//timingg
 		} else if element.Value == "CONFIG" {
 			key, err := purpleStringArray.GetElementAt(i + 1)
 			if err != nil {
@@ -95,12 +97,12 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 				}
 				switch key.Value {
 				case "dir":
-					encoded := client.resp.E.EncodeStringArray(
+					encoded := client.resp.E.EncodeBulkStringArray(
 						[]string{"dir", client.rdbFile.GetDir()})
 					log.Println(encoded)
 					response.Write(encoded)
 				case "dbfilename":
-					response.Write(client.resp.E.EncodeStringArray(
+					response.Write(client.resp.E.EncodeBulkStringArray(
 						[]string{"dbfilename", client.rdbFile.GetDBFileName()}))
 				default:
 					log.Printf("%s not found", key.Value)
@@ -109,6 +111,65 @@ func (client *Client) evaluateStringArray(purpleArray arrayTypes.PurpleArray) {
 				log.Println("Not implemented yet")
 				return
 			}
+			i += 2
+		} else if element.Value == "KEYS" {
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			if key.Value == "*" {
+				var keys []string
+				for key := range client.getAll() {
+					keys = append(keys, key)
+				}
+				response.Write(client.resp.E.EncodeBulkStringArray(keys))
+			} else {
+				log.Println("Not implemented yet")
+				return
+			}
+			i += 1
+		} else if element.Value == "INFO" {
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			if key.Value == "replication" {
+				stringResponse := fmt.Sprintf("%s\n%s\n%s\n",
+					fmt.Sprintf("role:%s", client.serverConfig["role"].(string)),
+					fmt.Sprintf("master_replid:%s", client.serverConfig["master_replid"].(string)),
+					fmt.Sprintf("master_repl_offset:%d", client.serverConfig["master_repl_offset"].(int)))
+				response.Write(client.resp.E.EncodeBulkString(stringResponse))
+			} else {
+				log.Println("Not implemented yet")
+				return
+			}
+			i += 1
+		} else if element.Value == "REPLCONF" {
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			if key.Value == "capa" || key.Value == "listening-port" {
+				response.Write(client.resp.E.EncodeSimpleString("OK"))
+			} else {
+				log.Println("Not implemented yet")
+				return
+			}
+			i += 2
+		} else if element.Value == "PSYNC" {
+			key, err := purpleStringArray.GetElementAt(i + 1)
+			if err != nil {
+				return
+			}
+			if key.Value == "?" {
+				response.Write(client.resp.E.EncodeSimpleString(
+					fmt.Sprintf("%s %s %d", "FULLRESYNC",
+						client.serverConfig["master_replid"], client.serverConfig["master_repl_offset"])))
+			} else {
+				log.Println("Not implemented yet")
+				return
+			}
+			i += 2
 		}
 	}
 	client.writeChannel <- response.Bytes()

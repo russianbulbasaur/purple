@@ -33,7 +33,6 @@ func NewRDBFile(filename string, dir string) *RDBFile {
 		log.Fatalln(err)
 		return nil
 	}
-	log.Println("RDB file size : ", info.Size())
 	return &RDBFile{
 		file,
 		filePath,

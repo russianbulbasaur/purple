@@ -24,7 +24,7 @@ func decodeSimpleString(input []byte) (types.PurpleString, error, uint64) {
 
 func decodeBulkString(input []byte) (types.PurpleString, error, uint64) {
 	var counter uint64 = 1 //ignore the first byte
-	log.Println(string(input))
+	//check
 	purpleString := types.PurpleString{}
 	if !isValid(input) {
 		log.Println("invalid lf and cr bytes")
@@ -44,7 +44,8 @@ func decodeBulkString(input []byte) (types.PurpleString, error, uint64) {
 	}
 	payload := string(lengthAndPayload[1])
 	if len(payload) != bulkLength {
-		log.Println("Payload length and specified length do not match")
+		log.Printf("Payload length %d and specified length %d do not match",
+			len(payload), bulkLength)
 		return purpleString, errors.New("payload length and specified length do not match"), counter
 	}
 	counter += uint64(len(payload)) + 2

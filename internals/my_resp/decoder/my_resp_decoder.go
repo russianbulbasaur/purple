@@ -8,10 +8,6 @@ type MyRespDecoder struct {
 }
 
 func (decoder *MyRespDecoder) Decode(input []byte) (interface{}, error, uint64) {
-	//redis client ka bug
-	if input[len(input)-1] != constants.LF {
-		input = append(input, constants.LF)
-	}
 	switch input[0] {
 	case constants.SimpleStringPrefix:
 		return decodeSimpleString(input)

@@ -17,6 +17,7 @@ func (encoder *MyRespEncoder) EncodeBulkString(input string) []byte {
 		return response.Bytes()
 	}
 	response.WriteString(strconv.Itoa(stringLen))
+	response.Write([]byte{constants.CR, constants.LF})
 	response.WriteString(input)
 	response.Write([]byte{constants.CR, constants.LF})
 	return response.Bytes()

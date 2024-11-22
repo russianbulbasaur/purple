@@ -19,16 +19,15 @@ type Client struct {
 	cancel        context.CancelFunc
 	set           func(string, interface{}, int64)
 	get           func(string) interface{}
-	rdbReader     *rdb.RDBReader
+	getAll        func() map[string]models.DataNode
 	rdbFile       *rdb.RDBFile
+	serverConfig  map[string]interface{}
 }
 
 func NewClient(connection net.Conn, set func(string, interface{}, int64), get func(string) interface{},
-	rdbFile *rdb.RDBFile) *Client {
+	rdbFile *rdb.RDBFile, getAll func() map[string]models.DataNode,
+	config map[string]interface{}) *Client {
 	ctx, cancel := context.WithCancel(context.Background())
-	rdbReader := rdb.NewRDBReader(rdbFile)
-	rdbReader.ReadAuxiliaryFields()
-	rdbReader.ReadDatabase()
 	return &Client{
 		connection,
 		resp.Init(),
@@ -37,8 +36,9 @@ func NewClient(connection net.Conn, set func(string, interface{}, int64), get fu
 		cancel,
 		set,
 		get,
-		rdbReader,
+		getAll,
 		rdbFile,
+		config,
 	}
 }
 
@@ -70,7 +70,7 @@ func (client *Client) forkReader() {
 			client.kill()
 			break
 		}
-		message := buffer[0 : count-1]
+		message := buffer[0:count]
 		purpleType, err, _ := client.resp.D.Decode(message)
 		if err != nil {
 			log.Println(err)

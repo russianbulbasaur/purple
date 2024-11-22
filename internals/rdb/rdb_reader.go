@@ -32,14 +32,18 @@ func NewRDBReader(file *RDBFile) *RDBReader {
 	}
 }
 
-func (reader *RDBReader) ReadHeader() {
-	buffer := make([]byte, 9)
+func (reader *RDBReader) readHeader() string {
+	buffer := make([]byte, 5)
 	_, err := reader.bufReader.Read(buffer)
 	if err != nil {
 		log.Println(err)
-		return
+		return ""
 	}
-	log.Printf("Read : %s", string(buffer))
+	return string(buffer)
+}
+
+func (reader *RDBReader) IsValidRDB() bool {
+	return reader.readHeader() == "REDIS"
 }
 
 func (reader *RDBReader) ReadEOFSection() {
@@ -80,7 +84,7 @@ func (reader *RDBReader) ReadAuxiliaryFields() {
 	log.Println("Read auxiliary fields")
 }
 
-func (reader *RDBReader) ReadDatabase() {
+func (reader *RDBReader) ReadDatabase(result map[string]models.DataNode) {
 	for {
 		readByte, err := reader.bufReader.ReadByte()
 		if err != nil {
@@ -91,7 +95,7 @@ func (reader *RDBReader) ReadDatabase() {
 			expireHashTableSize := reader.getHashTableSize(true)
 			log.Printf("Hash table size : %d", hashTableSize)
 			log.Printf("Expire Hash table size : %d", expireHashTableSize)
-			reader.readValues(hashTableSize)
+			reader.readValues(hashTableSize, result)
 			break
 		}
 	}
@@ -115,32 +119,71 @@ func (reader *RDBReader) getHashTableSize(expire bool) int {
 	return 0
 }
 
-func (reader *RDBReader) readValues(hashTableSize int) {
+func (reader *RDBReader) readValues(hashTableSize int, result map[string]models.DataNode) {
 	for i := 0; i < hashTableSize; i++ {
 		readBytes, err := reader.bufReader.Peek(1)
 		readByte := readBytes[0]
 		if err != nil {
-			log.Fatalln("Value read : ", err)
+			log.Fatalln("value read : ", err)
 		}
+		var key string
+		var value interface{}
+		var expiry int64 = math.MaxInt64
 		if readByte == secondsExpiryOPCode {
-			reader.readSecondsExpiryValue()
+			key, value, expiry = reader.readSecondsExpiryValue()
 		} else if readByte == millisecondsExpiryOPCode {
-			reader.readMillisecondsExpiryValue()
+			key, value, expiry = reader.readMillisecondsExpiryValue()
 		} else {
-			reader.readNoExpiryValue()
+			key, value = reader.readNoExpiryValue()
+		}
+		result[key] = models.DataNode{
+			Value:  value,
+			Expiry: expiry,
 		}
 	}
 }
 
-func (reader *RDBReader) readMillisecondsExpiryValue() {
-
+func (reader *RDBReader) readMillisecondsExpiryValue() (string, string, int64) {
+	readByte, err := reader.bufReader.ReadByte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if readByte != millisecondsExpiryOPCode {
+		log.Fatalln("should not be in ms expiry")
+	}
+	var timeBytes []byte = make([]byte, 8)
+	_, err = reader.bufReader.Read(timeBytes)
+	var time int64
+	err = binary.Read(bytes.NewBuffer(timeBytes), binary.LittleEndian, &time)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	key, value := reader.readNoExpiryValue()
+	log.Printf("Key : %s Value : %s Expiry : %d", key, value, time)
+	return key, value, time
 }
 
-func (reader *RDBReader) readSecondsExpiryValue() {
-
+func (reader *RDBReader) readSecondsExpiryValue() (string, string, int64) {
+	readByte, err := reader.bufReader.ReadByte()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if readByte != secondsExpiryOPCode {
+		log.Fatalln("should not be in seconds expiry")
+	}
+	var timeBytes []byte = make([]byte, 4)
+	_, err = reader.bufReader.Read(timeBytes)
+	var time int64
+	err = binary.Read(bytes.NewBuffer(timeBytes), binary.LittleEndian, &time)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	key, value := reader.readNoExpiryValue()
+	log.Printf("Key : %s Value : %s Expiry : %d", key, value, time)
+	return key, value, time
 }
 
-func (reader *RDBReader) readNoExpiryValue() {
+func (reader *RDBReader) readNoExpiryValue() (string, string) {
 	valueTypeByte, err := reader.bufReader.ReadByte()
 	if err != nil {
 		log.Fatalln(err)
@@ -170,10 +213,22 @@ func (reader *RDBReader) readNoExpiryValue() {
 			log.Fatalln(err)
 		}
 		value := string(valueBuffer)
-		log.Printf("Value : %s", value)
+		log.Printf("value : %s", value)
+		return key, value
 	default:
-		log.Println("Value type read not implemented yet")
+		log.Println("value type read not implemented yet")
 	}
+	return "", ""
+}
+
+func (reader *RDBReader) ReadKeys() []string {
+	var result map[string]models.DataNode = make(map[string]models.DataNode)
+	reader.ReadDatabase(result)
+	var keys []string
+	for key := range result {
+		keys = append(keys, key)
+	}
+	return keys
 }
 
 func (reader *RDBReader) decodeLength() (BitCase, Length) {
